@@ -19,6 +19,10 @@ def basicCountsPerUser():
     urlCount = bid_data['url'].groupby(bid_data['bidder_id']).count()
     deviceCount = bid_data['device'].groupby(bid_data['bidder_id']).count()
     auctionCount = bid_data['auction'].groupby(bid_data['bidder_id']).count()
+    grBidCount = bid_data['bid_id'].groupby(bid_data['bidder_id']).count()
+    grMerchandiseCount = bid_data['merchandise'].groupby(bid_data['bidder_id']).count()
+    payAccCount = train_data['payment_account'].groupby(train_data['bidder_id']).count()
+    addressCount = train_data['address'].groupby(train_data['bidder_id']).count()
 
     train_data['nb0fCountry'] = train_data.apply(lambda x: numberofActions(x, countryCount, bidderList), axis=1)
     test_data['nb0fCountry'] = test_data.apply(lambda x: numberofActions(x, countryCount, bidderList), axis=1)
@@ -34,6 +38,18 @@ def basicCountsPerUser():
 
     train_data['nb0fAuction'] = train_data.apply(lambda x: numberofActions(x, auctionCount, bidderList), axis=1)
     test_data['nb0fAuction'] = test_data.apply(lambda x: numberofActions(x, auctionCount, bidderList), axis=1)
+
+    train_data['nb0fBids'] = train_data.apply(lambda x: numberofActions(x, grBidCount, bidderList), axis=1)
+    test_data['nb0fBids'] = test_data.apply(lambda x: numberofActions(x, grBidCount, bidderList), axis=1)
+
+    train_data['nb0fMerch'] = train_data.apply(lambda x: numberofActions(x, grMerchandiseCount, bidderList), axis=1)
+    test_data['nb0fMerch'] = test_data.apply(lambda x: numberofActions(x, grMerchandiseCount, bidderList), axis=1)
+
+    train_data['nb0fPayAcc'] = train_data.apply(lambda x: numberofActions(x, payAccCount, bidderList), axis=1)
+    test_data['nb0fPayAcc'] = test_data.apply(lambda x: numberofActions(x, payAccCount, bidderList), axis=1)
+
+    train_data['nb0fAdress'] = train_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
+    test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
 
 basicCountsPerUser()
 
