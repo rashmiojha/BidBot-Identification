@@ -15,6 +15,7 @@ def findMerchandise(line,grouped,dict,dataid):
     res = np.zeros(10)
     if line in dataid:
         merch = np.array(grouped[grouped['bidder_id']==line]['merchandise'])[0]
+        print merch
         res[dict[merch]] = 1
     return tuple(res)
 
@@ -59,6 +60,7 @@ def basicUniqueCountsPerUser(train_data,test_data):
 
 def granularMerchandise(train_data,test_data):
     merchList = bid_data['merchandise'].unique()
+    print merchList
     train_data[['jewelry', 'furniture', 'home goods', 'mobile', 'sporting goods',
            'office equipment', 'computers', 'books and music', 'clothing',
            'auto parts']] = pd.DataFrame(np.zeros((train_data.shape[0], 10)),

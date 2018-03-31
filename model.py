@@ -1,6 +1,7 @@
+from features import User
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
-from features import User
 
 def testModel():
     User.basicCountsPerUser()
