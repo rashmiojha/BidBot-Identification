@@ -1,5 +1,5 @@
 from DataProcess import Data
-
+from features import User2
 bid_data = Data('../data').bidData
 train_data = Data('../data').trainData
 test_data = Data('../data').testData
@@ -48,4 +48,5 @@ def basicCountsPerUser():
 
     train_data['nb0fAdress'] = train_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
     test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
-
+    User2.basicUniqueCountsPerUser(train_data,test_data)
+    User2.granularMerchandise(train_data,test_data)
