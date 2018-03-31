@@ -16,8 +16,7 @@ def mergingFeature(line, features, dataid):
     if not line['bidder_id'] in dataid:
         return 0
     else:
-        index = features.index[features['bidder_id'] == line['bidder_id']]
-        return features['value'][index].item()
+        return features[line['bidder_id']]
 
 
 def basicCountsPerUser():
@@ -76,6 +75,5 @@ def bidsOnSelf():
             countBidsOnSelf[b] = count
             count = 0
             prev = b
-    countBidsOnSelf = pd.DataFrame(countBidsOnSelf.items(), columns=['bidder_id', 'value'])
     train_data['nb0fBidsOnSelf'] = train_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
     test_data['nb0fBidsOnSelf'] = test_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
