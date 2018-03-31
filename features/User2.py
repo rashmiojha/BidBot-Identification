@@ -16,7 +16,7 @@ def findMoreFeatures():
     # grMerchandiseCount = bid_data['merchandise'].groupby(bid_data['bidder_id']).count()
     # payAccCount = train_data['payment_account'].groupby(train_data['bidder_id']).count()
     # addressCount = train_data['address'].groupby(train_data['bidder_id']).count()
-    # 
+    #
     # bidderList = bid_data['bidder_id'].unique()
     #
     # train_data['nb0fBids'] = train_data.apply(lambda x: numberofActions(x, grBidCount, bidderList), axis=1)

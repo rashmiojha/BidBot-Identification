@@ -4,8 +4,6 @@ bid_data = Data('../data').bidData
 train_data = Data('../data').trainData
 test_data = Data('../data').testData
 
-print (bid_data)
-
 def numberofActions(line, dataGrouped, dataid):
     if not line['bidder_id'] in dataid:
         return 0
@@ -51,7 +49,3 @@ def basicCountsPerUser():
     train_data['nb0fAdress'] = train_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
     test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
 
-basicCountsPerUser()
-
-print (train_data)
-print (test_data)
