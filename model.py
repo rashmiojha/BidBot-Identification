@@ -4,6 +4,7 @@ from features import User
 
 def testModel():
     User.basicCountsPerUser()
+    User.bidsOnSelf()
     tempTrainData = User.train_data
     X_train = tempTrainData.drop(["bidder_id", "outcome", "payment_account", "address"], axis=1)
     Y_train = tempTrainData["outcome"]

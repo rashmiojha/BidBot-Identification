@@ -1,5 +1,7 @@
 from DataProcess import Data
 from features import User2
+import pandas as pd
+
 bid_data = Data('../data').bidData
 train_data = Data('../data').trainData
 test_data = Data('../data').testData
@@ -9,6 +11,14 @@ def numberofActions(line, dataGrouped, dataid):
         return 0
     else:
         return dataGrouped[line['bidder_id']]
+
+def mergingFeature(line, features, dataid):
+    if not line['bidder_id'] in dataid:
+        return 0
+    else:
+        index = features.index[features['bidder_id'] == line['bidder_id']]
+        return features['value'][index].item()
+
 
 def basicCountsPerUser():
     bidderList = bid_data['bidder_id'].unique()
@@ -50,3 +60,22 @@ def basicCountsPerUser():
     test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
     User2.basicUniqueCountsPerUser(train_data,test_data)
     User2.granularMerchandise(train_data,test_data)
+
+def bidsOnSelf():
+    bidderList = bid_data['bidder_id'].unique()
+    tmp_data = bid_data.sort_values(['auction', 'time']).groupby(bid_data['auction'])
+    countBidsOnSelf = {}
+    for t in tmp_data:
+        prev = ''
+        count = 0
+        for b in t[1]['bidder_id']:
+            if(b == prev):
+                if(b in countBidsOnSelf.keys()):
+                    count = countBidsOnSelf[b]
+                    count += 1
+            countBidsOnSelf[b] = count
+            count = 0
+            prev = b
+    countBidsOnSelf = pd.DataFrame(countBidsOnSelf.items(), columns=['bidder_id', 'value'])
+    train_data['nb0fBidsOnSelf'] = train_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
+    test_data['nb0fBidsOnSelf'] = test_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
