@@ -1,4 +1,4 @@
-from features import User, User2
+from features import User, User2, Auction, Miscellaneous
 from DataProcess import Data
 from graphs import roc_auc
 
@@ -71,14 +71,18 @@ def create_and_save():
     print ("Loading data...")
     data = Data('data')
     print ("Extracting features...")
-    print ("1. Extracting basic counts per user")
-    data.train_data, data.test_data = User.basicCountsPerUser(data)
-    print ("2. Extracting basic unique counts per user")
-    data.train_data, data.test_data = User2.basicUniqueCountsPerUser(data)
-    print ("3. Extracting granular merchandise")
-    data.train_data, data.test_data = User2.granularMerchandise(data)
-    print ("4. Extracting bids on self")
-    data.train_data, data.test_data = User.bidsOnSelf(data)
+    # print ("1. Extracting basic counts per user")
+    # data.train_data, data.test_data = User.basicCountsPerUser(data)
+    # print ("2. Extracting basic unique counts per user")
+    # data.train_data, data.test_data = User2.basicUniqueCountsPerUser(data)
+    # print ("3. Extracting granular merchandise")
+    # data.train_data, data.test_data = User2.granularMerchandise(data)
+    # print ("4. Extracting bids on self")
+    # data.train_data, data.test_data = User.bidsOnSelf(data)
+    # print ("5. Extracting auction features")
+    # data.train_data, data.test_data = Auction.findAuctionFeatures(data)
+    print ("6. Extracting miscellaneous features")
+    data.train_data, data.test_data = Miscellaneous.findMiscellaneousFeatures(data)
     print ("Saving train features")
     train_features = data.train_data.drop(["payment_account", "address"], axis=1)
     feature_pkl_filename = 'model/train_features.pkl'
