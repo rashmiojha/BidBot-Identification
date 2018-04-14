@@ -1,10 +1,4 @@
-from DataProcess import Data
-from features import User2
-import pandas as pd
 
-bid_data = Data('../data').bidData
-train_data = Data('../data').trainData
-test_data = Data('../data').testData
 
 def numberofActions(line, dataGrouped, dataid):
     if not line['bidder_id'] in dataid:
@@ -19,7 +13,11 @@ def mergingFeature(line, features, dataid):
         return features[line['bidder_id']]
 
 
-def basicCountsPerUser():
+def basicCountsPerUser(data):
+    bid_data = data.bidData
+    train_data = data.trainData
+    test_data = data.testData
+
     bidderList = bid_data['bidder_id'].unique()
     countryCount = bid_data['country'].groupby(bid_data['bidder_id']).count()
     ipCount = bid_data['ip'].groupby(bid_data['bidder_id']).count()
@@ -28,8 +26,10 @@ def basicCountsPerUser():
     auctionCount = bid_data['auction'].groupby(bid_data['bidder_id']).count()
     grBidCount = bid_data['bid_id'].groupby(bid_data['bidder_id']).count()
     grMerchandiseCount = bid_data['merchandise'].groupby(bid_data['bidder_id']).count()
-    payAccCount = train_data['payment_account'].groupby(train_data['bidder_id']).count()
-    addressCount = train_data['address'].groupby(train_data['bidder_id']).count()
+    payAccCount_train = train_data['payment_account'].groupby(train_data['bidder_id']).count()
+    payAccCount_test = test_data['payment_account'].groupby(test_data['bidder_id']).count()
+    addressCount_train = train_data['address'].groupby(train_data['bidder_id']).count()
+    addressCount_test = test_data['payment_account'].groupby(test_data['bidder_id']).count()
 
     train_data['nb0fCountry'] = train_data.apply(lambda x: numberofActions(x, countryCount, bidderList), axis=1)
     test_data['nb0fCountry'] = test_data.apply(lambda x: numberofActions(x, countryCount, bidderList), axis=1)
@@ -52,17 +52,22 @@ def basicCountsPerUser():
     train_data['nb0fMerch'] = train_data.apply(lambda x: numberofActions(x, grMerchandiseCount, bidderList), axis=1)
     test_data['nb0fMerch'] = test_data.apply(lambda x: numberofActions(x, grMerchandiseCount, bidderList), axis=1)
 
-    train_data['nb0fPayAcc'] = train_data.apply(lambda x: numberofActions(x, payAccCount, bidderList), axis=1)
-    test_data['nb0fPayAcc'] = test_data.apply(lambda x: numberofActions(x, payAccCount, bidderList), axis=1)
+    train_data['nb0fPayAcc'] = train_data.apply(lambda x: numberofActions(x, payAccCount_train, bidderList), axis=1)
+    test_data['nb0fPayAcc'] = test_data.apply(lambda x: numberofActions(x, payAccCount_test, bidderList), axis=1)
 
-    train_data['nb0fAdress'] = train_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
-    test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount, bidderList), axis=1)
-    User2.basicUniqueCountsPerUser(train_data,test_data)
-    User2.granularMerchandise(train_data,test_data)
+    train_data['nb0fAdress'] = train_data.apply(lambda x: numberofActions(x, addressCount_train, bidderList), axis=1)
+    test_data['nb0fAdress'] = test_data.apply(lambda x: numberofActions(x, addressCount_test, bidderList), axis=1)
 
-def bidsOnSelf():
+    return train_data, test_data
+
+def bidsOnSelf(data):
+    bid_data = data.bidData
+    train_data = data.trainData
+    test_data = data.testData
+
     bidderList = bid_data['bidder_id'].unique()
     tmp_data = bid_data.sort_values(['auction', 'time']).groupby(bid_data['auction'])
+    # print (tmp_data.head(5))
     countBidsOnSelf = {}
     for t in tmp_data:
         prev = ''
@@ -75,5 +80,22 @@ def bidsOnSelf():
             countBidsOnSelf[b] = count
             count = 0
             prev = b
+    # timeDiff = {}
+    # for t in tmp_data:
+    #     prev = ''
+    #     diff = 0
+    #     for b in t[1]:
+    #         print (b)
+    #         if(b == prev):
+    #             if(b in timeDiff.keys()):
+    #                 diff = t[1]['time'] - prev[1]['time']
+    #         timeDiff[b[1]['bidder_id']] = diff
+    #         diff = 0
+    #         prev = b
+    # print (timeDiff)
+
     train_data['nb0fBidsOnSelf'] = train_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
     test_data['nb0fBidsOnSelf'] = test_data.apply(lambda x: mergingFeature(x, countBidsOnSelf, bidderList), axis=1)
+
+    return train_data, test_data
+
