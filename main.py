@@ -7,6 +7,7 @@ def create_model():
 def predict():
     print('Choose an algorithm: ')
     algo = input('1:LR\n2:Random Forest\n-->')
+    print (algo)
     model.predict_score(algo)
 
 if __name__ == '__main__':
