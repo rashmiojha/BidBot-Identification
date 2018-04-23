@@ -144,4 +144,29 @@ def mygraph():
     plt.title('Total number of bids per category')
     plt.show()
 
-mygraph()
+def timegraph():
+    bid_data = pd.read_csv('data/bids.csv')
+    feature_data = pd.read_csv('data/train.csv')
+    all = pd.merge(bid_data, feature_data, how='left', on='bidder_id')
+    all = all.sort_values(by=['time'])
+
+    bots = all.loc[all['outcome'] == 1]
+    humans = all.loc[all['outcome'] == 0]
+    time = all['time'].unique()
+    count_bots = []
+    count_humans = []
+    count_all = []
+    for t in time:
+        count_bots.append(bots[bots['time'] == t].count().unique()[0])
+        count_humans.append(humans[humans['time'] == t].count().unique()[0])
+        count_all.append(all[all['time'] == t].count().unique()[0])
+    g1 = plt.plot(time, count_all)
+    g2 = plt.plot(time, count_bots)
+    g3 = plt.plot(time, count_humans)
+    plt.legend((g1[0], g2[0], g3[0]), ('All', 'Bot', 'Human'))
+    plt.ylabel('# of bids')
+    plt.xlabel('Time')
+    plt.title('Total number of bids over one time interval')
+    plt.show()
+
+# timegraph()
