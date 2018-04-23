@@ -1,7 +1,7 @@
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt;  plt.rcdefaults()
 from DataProcess import Data
-
+import pickle
 from sklearn.cross_validation import StratifiedKFold
 from scipy import interp
 import numpy as np
@@ -24,7 +24,21 @@ def percentageBids():
     plt.ylabel('Percentage of Bids')
     plt.show()
 
-def timeBids():
+def allGraphs():
+    # train_bids = pd.merge(bid_data, train_data,how='left',on='bidder_id')
+    # statData = train_bids.groupby('outcome')['bid_id'].count()
+    # '0 =  Human 1 = bot'
+    # per_human = statData[0] *100/(statData[0]+statData[1])
+    # per_bot = statData[1] *100/(statData[0]+statData[1])
+    # objects = ('% Human bids', '% Bot bids')
+    # y_pos = np.arange(len(objects))
+    # percent = [per_human, per_bot]
+    # plt.bar(y_pos, percent, align='center', alpha=0.5)
+    # plt.xticks(y_pos, objects)
+    # plt.ylabel('Percentage of Bids')
+    # plt.show()
+    d = Data('data')
+    bid_data = d.bidData
     bid_data['time'] = bid_data['time'] /100000000000
     bid_data.plot.scatter(x='time', y= 'bid_id')
     plt.scatter(bid_data['time'], bid_data['bid_id'], marker='o', color='r', alpha=1, s=400)
@@ -51,6 +65,7 @@ def nnLossCurve(history):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
+# allGraphs()
 
 def roc_auc(train_features, classifier):
     X_train = train_features.drop(["bidder_id", "outcome"], axis=1)
@@ -86,3 +101,47 @@ def roc_auc(train_features, classifier):
     plt.show()
 
     return mean_auc
+
+def testGraph():
+    x = ['a','b','c']
+    y = [10,20,30]
+
+    fig = plt.figure()
+
+    width = .35
+    ind = np.arange(len(y))
+    plt.bar(ind, y, width=width)
+    plt.xticks(ind, x)
+
+    plt.show()
+
+def mygraph():
+    bid_data = pd.read_csv('data/bids.csv')
+    feature_data = pd.read_csv('data/features.csv')
+    all = pd.merge(bid_data, feature_data, how='left', on='bidder_id')
+
+    bots = all.loc[all['outcome'] == 1]
+    humans = all.loc[all['outcome'] == 0]
+
+    merchandise = all['merchandise'].unique()
+    count_bots = []
+    count_humans = []
+    for mer in merchandise:
+        count_bots.append(bots[bots['merchandise'] == mer].count().unique()[0])
+        count_humans.append(humans[humans['merchandise'] == mer].count().unique()[0])
+
+    x = merchandise
+    width = .35
+    fig = plt.figure()
+    ind = np.arange(len(x))
+    g1 = plt.bar(ind, count_bots, width=width)
+    g2 = plt.bar(ind + width, count_humans, width=width)
+    plt.xticks(ind + width/2, x)
+    fig.autofmt_xdate()
+
+    plt.legend((g1[0], g2[0]), ('Bot', 'Human'))
+    plt.ylabel('# of bids')
+    plt.title('Total number of bids per category')
+    plt.show()
+
+mygraph()
