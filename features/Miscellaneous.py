@@ -1,3 +1,5 @@
+import pandas as pd
+from DataProcess import Data
 def mergingFeature(line, features, dataid):
     if not line['bidder_id'] in dataid:
         return 0
@@ -9,8 +11,6 @@ def findMiscellaneousFeatures(data):
     train_data = data.trainData
     test_data = data.testData
     bidderList = bid_data['bidder_id'].unique()
-
-    print (bid_data.head(5))
 
     meanCtryCount = {}
     stdCtryCount = {}
@@ -45,31 +45,46 @@ def findMiscellaneousFeatures(data):
             stdCtryCount[bidder] = countryData.loc[bidder].std()
 
 
-    temp = bid_data
-    temp['count'] = 1
-    urlData = temp.groupby(['bidder_id', 'url'])['count'].sum().reset_index(name='count')
-    urlData = urlData.pivot(index='bidder_id', columns='url', values='count')
-    bidderList = urlData.index.values
+    # temp = bid_data
 
-    for bidder in bidderList:
-        if (urlData.loc[bidder].mean() > 0):
-            meanUrlCount[bidder] = urlData.loc[bidder].mean()
+    count_bids = bid_data.groupby('url').bid_id.count().reset_index()
+    count_bids = count_bids.rename(columns={'bid_id': 'urlCount'})
+    b = pd.merge(bid_data, count_bids[['url', 'urlCount']], on='url', how='left')
+    t = pd.merge(train_data, b, on='bidder_id', how='left')
+    mt = t.groupby('bidder_id').urlCount.mean().reset_index()
+    mt = mt.rename(columns={'urlCount': 'meanUrlCount'})
+    st = t.groupby('bidder_id').urlCount.std().reset_index()
+    st = st.rename(columns={'urlCount': 'stdUrlCount'})
+    t = pd.merge(mt, st, on='bidder_id', how='left')
+    # print (t.head(5))
+    # print (t.shape)
+    # train_data = pd.merge(train_data, t[['bidder_id', 'meanUrlCount','stdUrlCount']], on='bidder_id', how='left')
+    t = pd.merge(test_data, b, on='bidder_id', how='left')
+    mt = t.groupby('bidder_id').urlCount.mean().reset_index()
+    mt = mt.rename(columns={'urlCount': 'meanUrlCount'})
+    st = t.groupby('bidder_id').urlCount.std().reset_index()
+    st = st.rename(columns={'urlCount': 'stdUrlCount'})
+    tt = pd.merge(mt, st, on='bidder_id', how='left')
+    # test_data = pd.merge(test_data, tt[['bidder_id', 'meanUrlCount', 'stdUrlCount']], on='bidder_id', how='left')
 
-        if (urlData.loc[bidder].std() > 0):
-            stdUrlCount[bidder] = urlData.loc[bidder].std()
 
-    temp = bid_data
-    temp['count'] = 1
-    ipData = temp.groupby(['bidder_id', 'ip'])['count'].sum().reset_index(name='count')
-    ipData = ipData.pivot(index='bidder_id', columns='ip', values='count')
-    bidderList = ipData.index.values
-
-    for bidder in bidderList:
-        if (ipData.loc[bidder].mean() > 0):
-            meanIpCount[bidder] = ipData.loc[bidder].mean()
-
-        if (ipData.loc[bidder].std() > 0):
-            stdIpCount[bidder] = ipData.loc[bidder].std()
+    count_bids = bid_data.groupby('ip').bid_id.count().reset_index()
+    count_bids = count_bids.rename(columns={'bid_id': 'ipCount'})
+    b = pd.merge(bid_data, count_bids[['ip', 'ipCount']], on='ip', how='left')
+    t = pd.merge(train_data, b, on='bidder_id', how='left')
+    mt = t.groupby('bidder_id').ipCount.mean().reset_index()
+    mt = mt.rename(columns={'ipCount': 'meanIpCount'})
+    st = t.groupby('bidder_id').ipCount.std().reset_index()
+    st = st.rename(columns={'ipCount': 'stdIpCount'})
+    t = pd.merge(mt, st, on='bidder_id', how='left')
+    # train_data = pd.merge(train_data, t[['bidder_id', 'meanIpCount', 'stdIpCount']], on='bidder_id', how='left')
+    t = pd.merge(test_data, b, on='bidder_id', how='left')
+    mt = t.groupby('bidder_id').ipCount.mean().reset_index()
+    mt = mt.rename(columns={'ipCount': 'meanIpCount'})
+    st = t.groupby('bidder_id').ipCount.std().reset_index()
+    st = st.rename(columns={'ipCount': 'stdIpCount'})
+    tt = pd.merge(mt, st, on='bidder_id', how='left')
+    # test_data = pd.merge(test_data, tt[['bidder_id', 'meanIpCount', 'stdIpCount']], on='bidder_id', how='left')
 
     temp = bid_data
     temp['count'] = 1
@@ -108,3 +123,4 @@ def findMiscellaneousFeatures(data):
     train_data['stdBidsPerDevice'] = train_data.apply(lambda x: mergingFeature(x, stdDeviceCount, bidderList), axis=1)
     test_data['stdBidsPerDevice'] = test_data.apply(lambda x: mergingFeature(x, stdDeviceCount, bidderList), axis=1)
     return train_data, test_data
+

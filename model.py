@@ -1,4 +1,5 @@
 from features import User, User2, Auction, Miscellaneous
+from features.Time import timeStartEndDiff, bidsPerTime
 from DataProcess import Data
 from graphs import roc_auc, nnLossCurve
 from sklearn.metrics import roc_curve, auc
@@ -11,9 +12,11 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pickle
+from sklearn.ensemble import VotingClassifier
 from keras.models import Sequential
 from keras.layers import Dense, Activation, SimpleRNN, LSTM
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
 def load_features():
     print ("Loading train features")
@@ -46,7 +49,7 @@ def logistic_regr():
     logisticRegr.fit_transform(X_train, Y_train)
     prediction = logisticRegr.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_lr.csv', index=False)
     print ("Output file successfully created")
 
     print ("Generating auc curve and auc score")
@@ -71,12 +74,22 @@ def random_forest():
     randomForest.fit(X_train, Y_train)
     prediction = randomForest.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_rf.csv', index=False)
     print ("Output file successfully created")
 
     print ("Generating auc curve and auc score")
     auc = roc_auc(train_features, randomForest)
     print ("AUC score : " + str(auc))
+    x = X_train.columns
+    y = randomForest.feature_importances_
+    ind = np.arange(len(y))
+    fig = plt.figure()
+    plt.bar(ind, y, width=0.35)
+    plt.xticks(ind, x)
+    plt.ylabel("Importance")
+    plt.title("Feature Importance")
+    fig.autofmt_xdate()
+    plt.show()
 
 def bagged_tree():
     train_features, test_features = load_features()
@@ -97,7 +110,7 @@ def bagged_tree():
     bag_class.fit(X_train, Y_train)
     prediction = bag_class.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_bagged.csv', index=False)
     print ("Output file successfully created")
 
     print ("Generating auc curve and auc score")
@@ -122,7 +135,7 @@ def ada_boost():
     adaBoost.fit(X_train, Y_train)
     prediction = adaBoost.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_ada.csv', index=False)
     print ("Output file successfully created")
 
     print ("Generating auc curve and auc score")
@@ -145,9 +158,10 @@ def gradient_boost():
 
     print ("Generating submission file")
     graBoost.fit(X_train, Y_train)
+    print (graBoost.feature_importances_)
     prediction = graBoost.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_gradient.csv', index=False)
     print ("Output file successfully created")
 
     print ("Generating auc curve and auc score")
@@ -172,7 +186,7 @@ def extra_tree():
     extraTree.fit(X_train, Y_train)
     prediction = extraTree.predict_proba(X_test)
     test_features['prediction'] = prediction[:, 1]
-    test_features[['bidder_id', 'prediction']].to_csv('data/submission.csv', index=False)
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_extra_tree.csv', index=False)
     print("Output file successfully created")
 
     print("Generating auc curve and auc score")
@@ -216,7 +230,7 @@ def rnn():
     seed = 7
     np.random.seed(seed)
     model = Sequential()
-    model.add(Dense(10, input_dim = 35, init='uniform', activation='relu'))
+    model.add(Dense(10, input_dim = 40, init='uniform', activation='relu'))
     model.add(Dense(8, init='uniform', activation='relu'))
     model.add(Dense(1,init='uniform', activation='sigmoid'))
     # Compile model
@@ -239,31 +253,67 @@ def create_and_save():
     data = Data('data')
     print ("Extracting features...")
     print ("1. Extracting basic counts per user")
-    data.train_data, data.test_data = User.basicCountsPerUser(data)
+    data.trainData, data.testData = User.basicCountsPerUser(data)
     print ("2. Extracting basic unique counts per user")
-    data.train_data, data.test_data = User2.basicUniqueCountsPerUser(data)
+    data.trainData, data.testData = User2.basicUniqueCountsPerUser(data)
     print ("3. Extracting granular merchandise")
-    data.train_data, data.test_data = User2.granularMerchandise(data)
+    data.trainData, data.testData = User2.granularMerchandise(data)
     print ("4. Extracting bids on self")
-    data.train_data, data.test_data = User.bidsOnSelf(data)
+    data.trainData, data.testData = User.bidsOnSelf(data)
     print ("5. Extracting auction features")
-    data.train_data, data.test_data = Auction.findAuctionFeatures(data)
+    data.trainData, data.testData = Auction.findAuctionFeatures(data)
     print ("6. Extracting miscellaneous features")
-    data.train_data, data.test_data = Miscellaneous.findMiscellaneousFeatures(data)
+    data.trainData, data.testData = Miscellaneous.findMiscellaneousFeatures(data)
+    print("7. Extracting temporal features")
+    data.trainData, data.testData = timeStartEndDiff(data)
+    data.trainData, data.testData = bidsPerTime(data)
     print ("Saving train features")
-    train_features = data.train_data.drop(["payment_account", "address"], axis=1)
+    print (data.testData.shape)
+    data.trainData.to_csv('trained_features.csv', index=False)
+    train_features = data.trainData.drop(["payment_account", "address"], axis=1)
     feature_pkl_filename = 'model/train_features.pkl'
     feature_pkl = open(feature_pkl_filename, 'wb')
     pickle.dump(train_features, feature_pkl)
     feature_pkl.close()
     print ("Train Features saved")
     print ("Saving test features")
-    test_features = data.test_data.drop(["payment_account", "address"], axis=1)
+    test_features = data.testData.drop(["payment_account", "address"], axis=1)
     feature_pkl_filename = 'model/test_features.pkl'
     feature_pkl = open(feature_pkl_filename, 'wb')
     pickle.dump(test_features, feature_pkl)
     feature_pkl.close()
     print ("Test Features saved")
+
+def ensemble():
+    train_features, test_features = load_features()
+    train_features = train_features.fillna(value=0)
+    test_features = test_features.fillna(value=0)
+    X_train = train_features.drop(["bidder_id", "outcome"], axis=1)
+    Y_train = train_features["outcome"]
+    X_test = test_features.drop(["bidder_id"], axis=1)
+    print ("Training ensemble model")
+    randomForest = RandomForestClassifier(n_estimators=500, max_depth=6, min_samples_leaf=1)
+    graBoost = GradientBoostingClassifier(n_estimators=500, learning_rate=0.001,max_depth=6, min_samples_leaf=1, max_features='sqrt')
+    extraTree = ExtraTreesClassifier(n_estimators=500, max_features=10)
+    ensemble = VotingClassifier(estimators=[('rf',randomForest),('gb', graBoost),('et',extraTree)],voting='soft',weights=[2.5,1,0.5])
+
+    print ("Cross validation score (Ensemble) : ")
+    cv_score = np.mean(cross_val_score(ensemble, X_train, Y_train, cv=5, scoring='roc_auc'))
+    print (cv_score)
+
+    print ("Generating submission file")
+    print ("Model trained")
+
+    ensemble.fit(X_train, Y_train)
+    prediction = ensemble.predict_proba(X_test)
+    test_features['prediction'] = prediction[:, 1]
+    test_features[['bidder_id', 'prediction']].to_csv('data/submission_re.csv', index=False)
+    print ("Output file successfully created")
+
+    print ("Generating auc curve and auc score")
+    auc = roc_auc(train_features, ensemble)
+    print ("AUC score : " + str(auc))
+
 
 def predict_score(algo):
     algo = int(algo)
@@ -277,5 +327,6 @@ def predict_score(algo):
         6 : extra_tree,
         7 : mlp,
         8 : rnn,
+        9 : ensemble,
     }
     options[algo]()

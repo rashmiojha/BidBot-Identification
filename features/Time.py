@@ -28,3 +28,23 @@ def timeStartEndDiff(data):
     test_data = pd.merge(test_data, b, on='bidder_id', how='left')
 
     return train_data, test_data
+
+def bidsPerTime(data):
+    bid_data = data.bidData
+    train_data = data.trainData
+    test_data = data.testData
+
+    count_bids = bid_data.groupby('time').bid_id.count().reset_index()
+    count_bids = count_bids.rename(columns={'bid_id': 'timeCount'})
+    b = pd.merge(bid_data, count_bids[['time','timeCount']], on='time', how='left')
+
+    t = pd.merge(train_data, b, on='bidder_id', how='left')
+
+    t = t.groupby('bidder_id').timeCount.mean().reset_index()
+
+    train_data = pd.merge(train_data, t[['bidder_id','timeCount']], on='bidder_id', how='left')
+
+    tt = pd.merge(test_data, b, on='bidder_id', how='left')
+    tt = tt.groupby('bidder_id').timeCount.mean().reset_index()
+    test_data = pd.merge(test_data, tt[['bidder_id', 'timeCount']], on='bidder_id', how='left')
+    return train_data, test_data
