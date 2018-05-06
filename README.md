@@ -1,9 +1,6 @@
 # BidBot-Identification
 ML based Bot Identification in Bidding Systems (Course Project for CSCE 633)
 
-Github repo: https://github.tamu.edu/rashmi-ojha/BidBot-Identification 
-
-
 Dataset: https://www.kaggle.com/c/facebook-recruiting-iv-human-or-bot/data
 
 
