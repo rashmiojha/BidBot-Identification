@@ -317,7 +317,6 @@ def ensemble():
 
 def predict_score(algo):
     algo = int(algo)
-    print ("Inside predict_score: ", algo)
     options = {
         1 : logistic_regr,
         2 : random_forest,

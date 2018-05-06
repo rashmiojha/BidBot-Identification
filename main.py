@@ -6,7 +6,7 @@ def create_model():
 
 def predict():
     print('Choose an algorithm: ')
-    algo = input('1:LR\n2:Random Forest\n-->')
+    algo = input('1:LR\n2:Random Forest\n3:ada_boost\n4:gradient_boost\n5:bagged_tree\n6:extra_tree\n7:mlp\n8:rnn\n9:ensemble\n-->')
     print (algo)
     model.predict_score(algo)
 
